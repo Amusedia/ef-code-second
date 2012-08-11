@@ -3,7 +3,7 @@
 Templates for generating context, entities, entity configurations, repositories, and db migrations configuration from Entity Framework model (edmx).
 
 ##Context.tt##
-This template creates the DbContext subclass that contains the sets and repositories for accessing table data.  DbSets are created as private members which are then exposed as public members through repositories, see repository.tt section for more information on repositories. The subclass also overrides OnModelCreating method to use entity configurations and calls a partial method CustomOnModelCreating method that can be implemented to contain additional model creation logic.
+This template creates the DbContext subclass that contains the repositories for accessing table data.  The generated constructor will initialize the repositories by passing the concrete DbSet objects to the repositories' constructors.  See repository.tt section for more information on repositories. The subclass also overrides OnModelCreating method to use entity configurations and calls a partial method CustomOnModelCreating method that can be implemented to contain additional model creation logic.
 
 ##Entity.tt##
 This template generates poco for the entities defined in the model.  The generated poco also implements IValidatableObject interface and contains a partial method CustomValidate that can be implemented to contain additional validation logic.
