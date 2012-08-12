@@ -22,6 +22,7 @@ namespace Data.Configurations
     
         public ApplicationConfiguration()
         {
+    		this.ToTable("Applications");
     		this.HasKey(t => t.Id);
     		this.Property(t => t.Name).IsRequired().HasMaxLength(256);
     		this.Property(t => t.DisplayName).IsRequired().HasMaxLength(512);

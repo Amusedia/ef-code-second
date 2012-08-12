@@ -22,6 +22,7 @@ namespace Data.Configurations
     
         public UserConfiguration()
         {
+    		this.ToTable("Users");
     		this.HasKey(t => t.Id);
     		this.Property(t => t.Username).IsRequired().HasMaxLength(256);
     		this.Property(t => t.Email).IsRequired().HasMaxLength(256);

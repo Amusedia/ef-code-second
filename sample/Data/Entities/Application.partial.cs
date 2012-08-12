@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Data.Entities
+namespace Data.Entities.Entities
 {
     public partial class Application : IValidatableObject
     {

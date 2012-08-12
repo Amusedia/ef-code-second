@@ -31,6 +31,7 @@ namespace Data
     		Users = new UserRepository(this.Set<User>());
     		Tests = new TestRepository(this.Set<Test>());
     		ApplicationUsers = new ApplicationUserRepository(this.Set<ApplicationUser>());
+    		Test2 = new Test2Repository(this.Set<Test2>());
         }
     
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -39,6 +40,7 @@ namespace Data
             modelBuilder.Configurations.Add(new ApplicationConfiguration());
             modelBuilder.Configurations.Add(new ApplicationUserConfiguration());
             modelBuilder.Configurations.Add(new TestConfiguration());
+            modelBuilder.Configurations.Add(new Test2Configuration());
             modelBuilder.Configurations.Add(new UserConfiguration());
         }
     
@@ -46,5 +48,6 @@ namespace Data
         public UserRepository Users { get; set; }
         public TestRepository Tests { get; set; }
         public ApplicationUserRepository ApplicationUsers { get; set; }
+        public Test2Repository Test2 { get; set; }
     }
 }

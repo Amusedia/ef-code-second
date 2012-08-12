@@ -25,6 +25,7 @@
             <End Role="User" EntitySet="Users" />
             <End Role="ApplicationUser" EntitySet="ApplicationUsers" />
           </AssociationSet>
+          <EntitySet Name="Test2" EntityType="Database.Test2" />
         </EntityContainer>
         <EntityType Name="Application">
           <Key>
@@ -88,6 +89,12 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="Test2">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int64" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -112,13 +119,14 @@
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
         <DesignerProperty Name="EnablePluralization" Value="True" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="DefaultDatabaseSchema" Value="dbo" />
       </DesignerInfoPropertySet>
     </edmx:Options>
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram Name="Database" >
         <EntityTypeShape EntityType="Database.Application" Width="1.5" PointX="1.375" PointY="0.5" Height="1.787985026041667" />
-        <EntityTypeShape EntityType="Database.User" Width="1.5" PointX="7.375" PointY="0.5" Height="1.787985026041667" />
+        <EntityTypeShape EntityType="Database.User" Width="1.5" PointX="7.375" PointY="0.5" Height="1.787985026041667" IsExpanded="true" />
         <EntityTypeShape EntityType="Database.Test" Width="1.5" PointX="4.25" PointY="3.125" Height="1.7879850260416665" />
         <EntityTypeShape EntityType="Database.ApplicationUser" Width="1.5" PointX="4.25" PointY="0.5" Height="1.2110807291666668" />
         <AssociationConnector Association="Database.ApplicationApplicationUser">
@@ -126,9 +134,10 @@
           <ConnectorPoint PointX="4.25" PointY="1.297841796875" />
         </AssociationConnector>
         <AssociationConnector Association="Database.UserApplicationUser">
-          <ConnectorPoint PointX="7.375" PointY="1.3939925130208337" />
-          <ConnectorPoint PointX="5.75" PointY="1.3939925130208337" />
+          <ConnectorPoint PointX="7.375" PointY="1.3939925130208335" />
+          <ConnectorPoint PointX="5.75" PointY="1.3939925130208335" />
         </AssociationConnector>
+        <EntityTypeShape EntityType="Database.Test2" Width="1.5" PointX="7.875" PointY="4" Height="1.2110807291666665" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

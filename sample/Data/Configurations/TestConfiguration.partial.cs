@@ -22,6 +22,7 @@ namespace Data.Configurations
     
         public TestConfiguration()
         {
+    		this.ToTable("Tests");
     		this.HasKey(t => t.Id);
     		this.Property(t => t.Balance).HasPrecision(18, 15);
     		this.Property(t => t.RowVersion).IsRowVersion();

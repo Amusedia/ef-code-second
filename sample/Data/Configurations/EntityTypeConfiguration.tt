@@ -10,6 +10,8 @@ MetadataTools ef = new MetadataTools(this);
 
 string inputFile = @"..\Database.edmx";
 EdmItemCollection ItemCollection = loader.CreateEdmItemCollection(inputFile);
+EntityContainer container = ItemCollection.GetItems<EntityContainer>().FirstOrDefault();
+
 string namespaceName = code.VsNamespaceSuggestion();
 
 EntityFrameworkTemplateFileManager fileManager = EntityFrameworkTemplateFileManager.Create(this);
@@ -19,6 +21,7 @@ foreach (var entity in ItemCollection.GetItems<EntityType>().OrderBy(e => e.Name
 {
     var escapedEntityName = code.Escape(entity);
 	var typeConfigurationName = escapedEntityName + "Configuration";
+	var entitySetName = container.BaseEntitySets.OfType<EntitySet>().Single(es => es.ElementType == entity).Name;
 
     fileManager.StartNewFile(typeConfigurationName + ".partial.cs");
     BeginNamespace(namespaceName, code);
@@ -29,6 +32,7 @@ internal partial class <#=typeConfigurationName#> : EntityTypeConfiguration<<#=e
 
     public <#=typeConfigurationName#>()
     {
+		this.ToTable("<#=entitySetName#>");
 <# 	
 	string hasKey;
 	if(entity.KeyMembers.Count<EdmMember>() == 1)

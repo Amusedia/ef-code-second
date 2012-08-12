@@ -22,6 +22,7 @@ namespace Data.Configurations
     
         public ApplicationUserConfiguration()
         {
+    		this.ToTable("ApplicationUsers");
     		this.HasKey(t => t.Id);
     		this.HasRequired(t => t.Application).WithMany(t => t.ApplicationUsers).HasForeignKey(d => d.ApplicationId);
     		this.HasRequired(t => t.User).WithMany(t => t.UserApplications).HasForeignKey(d => d.UserId);

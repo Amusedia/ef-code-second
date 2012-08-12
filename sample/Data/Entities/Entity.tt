@@ -9,7 +9,7 @@ CodeRegion region = new CodeRegion(this, 1);
 
 string inputFile = @"..\Database.edmx";
 EdmItemCollection ItemCollection = loader.CreateEdmItemCollection(inputFile);
-string namespaceName = code.VsNamespaceSuggestion();
+string namespaceName = code.VsNamespaceSuggestion() + ".Entities";
 
 EntityFrameworkTemplateFileManager fileManager = EntityFrameworkTemplateFileManager.Create(this);
 WriteHeader(fileManager);

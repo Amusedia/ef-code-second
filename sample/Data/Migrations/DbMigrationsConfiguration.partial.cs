@@ -15,7 +15,7 @@ namespace Data.Migrations
 {
     /// <remarks>
     /// To add new migration run the following script
-    /// Add-Migration ${migrationName} -ProjectName "Data" -StartUpProjectName "${projectName}" -ConfigurationTypeName "Data.Migrations.DbMigrationsConfiguration" -ConnectionString ${connectionString} -ConnectionProviderName "System.Data.SqlClient"
+    /// Add-Migration ${migrationName} -ProjectName "${projectName}" -StartUpProjectName "${projectName}" -ConfigurationTypeName "Data.Migrations.DbMigrationsConfiguration" -ConnectionString ${connectionString} -ConnectionProviderName "System.Data.SqlClient"
     /// Add-Migration InitialCreate -ProjectName "Data" -StartUpProjectName "Data" -ConfigurationTypeName "Data.Migrations.DbMigrationsConfiguration" -ConnectionString "Server=localhost;Database=EF;Trusted_Connection=True;" -ConnectionProviderName "System.Data.SqlClient"
     /// </remarks>
     public sealed class DbMigrationsConfiguration : DbMigrationsConfiguration<DatabaseContext>

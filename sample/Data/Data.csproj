@@ -63,6 +63,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>EntityTypeConfiguration.tt</DependentUpon>
     </Compile>
+    <Compile Include="Configurations\Test2Configuration.partial.cs">
+      <DependentUpon>EntityTypeConfiguration.tt</DependentUpon>
+    </Compile>
     <Compile Include="Configurations\TestConfiguration.partial.cs">
       <DependentUpon>EntityTypeConfiguration.tt</DependentUpon>
     </Compile>
@@ -93,7 +96,15 @@
     <Compile Include="Entities\Test.partial.cs">
       <DependentUpon>Entity.tt</DependentUpon>
     </Compile>
+    <Compile Include="Entities\Test2.partial.cs">
+      <DependentUpon>Entity.tt</DependentUpon>
+    </Compile>
     <Compile Include="Entities\User.partial.cs">
+      <DependentUpon>Entity.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Entity.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
       <DependentUpon>Entity.tt</DependentUpon>
     </Compile>
     <Compile Include="Migrations\DbMigrationsConfiguration.partial.cs">
@@ -111,6 +122,9 @@
     <Compile Include="Repositories\Repository.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <DependentUpon>Repository.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Repositories\Test2Repository.partial.cs">
       <DependentUpon>Repository.tt</DependentUpon>
     </Compile>
     <Compile Include="Repositories\TestRepository.partial.cs">
