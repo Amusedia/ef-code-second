@@ -1,0 +1,110 @@
+﻿<#@ include file="..\\CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+WriteHeader(codeStringGenerator, fileManager);
+foreach (var entity in entities)
+{
+	var escapedEntityName = code.Escape(entity);
+    fileManager.StartNewFile(escapedEntityName + ".partial.cs");
+    BeginNamespace(code);
+#>
+<#=codeStringGenerator.UsingDirectives(inHeader: false)#>using System.ComponentModel.DataAnnotations;
+
+<#=codeStringGenerator.EntityClassOpening(entity, "IValidatableObject")#>
+{
+<#
+    var propertiesWithDefaultValues = typeMapper.GetPropertiesWithDefaultValues(entity);
+    var collectionNavigationProperties = typeMapper.GetCollectionNavigationProperties(entity);
+    var complexProperties = typeMapper.GetComplexProperties(entity);
+
+    if (propertiesWithDefaultValues.Any() || collectionNavigationProperties.Any() || complexProperties.Any())
+    {
+#>
+    public <#=escapedEntityName#>()
+    {
+<#
+        foreach (var edmProperty in propertiesWithDefaultValues)
+        {
+#>
+        this.<#=code.Escape(edmProperty)#> = <#=typeMapper.CreateLiteral(edmProperty.DefaultValue)#>;
+<#
+        }
+
+        foreach (var navigationProperty in collectionNavigationProperties)
+        {
+#>
+        this.<#=code.Escape(navigationProperty)#> = new HashSet<<#=typeMapper.GetTypeName(navigationProperty.ToEndMember.GetEntityType())#>>();
+<#
+        }
+
+        foreach (var complexProperty in complexProperties)
+        {
+#>
+        this.<#=code.Escape(complexProperty)#> = new <#=typeMapper.GetTypeName(complexProperty.TypeUsage)#>();
+<#
+        }
+#>
+    }
+
+<#
+    }
+
+    var simpleProperties = typeMapper.GetSimpleProperties(entity);
+    if (simpleProperties.Any())
+    {
+        foreach (var edmProperty in simpleProperties)
+        {
+#>
+    <#=codeStringGenerator.Property(edmProperty)#>
+<#
+        }
+    }
+
+    if (complexProperties.Any())
+    {
+#>
+
+<#
+        foreach(var complexProperty in complexProperties)
+        {
+#>
+    <#=codeStringGenerator.Property(complexProperty)#>
+<#
+        }
+    }
+
+    var navigationProperties = typeMapper.GetNavigationProperties(entity);
+    if (navigationProperties.Any())
+    {
+#>
+
+<#
+        foreach (var navigationProperty in navigationProperties)
+        {
+#>
+    <#=codeStringGenerator.NavigationProperty(navigationProperty)#>
+<#
+        }
+    }
+#>
+
+	partial void CustomValidate(ValidationContext validationContext, ref IEnumerable<ValidationResult> validationResults);
+	private IEnumerable<ValidationResult> CustomValidateWrapper(ValidationContext validationContext)
+    {
+		var results = new List<ValidationResult>();
+		var enumerable = results as IEnumerable<ValidationResult>;
+        CustomValidate(validationContext, ref enumerable);
+		return results;
+	}
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+		return CustomValidateWrapper(validationContext);
+    }
+}
+<#
+    EndNamespace(code);
+}
+
+fileManager.Process();
+#>

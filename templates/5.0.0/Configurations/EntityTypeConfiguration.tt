@@ -1,0 +1,159 @@
+﻿<#@ include file="..\\CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+WriteHeader(codeStringGenerator, fileManager);
+foreach (var entity in entities)
+{
+	var escapedEntityName = code.Escape(entity);
+	var typeConfigurationName = escapedEntityName + "Configuration";
+	var entitySetName = entitySets.Single(es => es.ElementType == entity).Name;
+
+    fileManager.StartNewFile(typeConfigurationName + ".partial.cs");
+    BeginNamespace(code);
+#>
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity.ModelConfiguration;
+using <#=escapedNamespace.Replace("Configurations", "Entities")#>;
+
+internal partial class <#=typeConfigurationName#> : EntityTypeConfiguration<<#=escapedEntityName#>>
+{
+	partial void CustomConfiguration();
+
+    public <#=typeConfigurationName#>()
+    {
+		this.ToTable("<#=entitySetName#>");
+<# 	
+	string hasKey;
+	if(entity.KeyMembers.Count<EdmMember>() == 1)
+		hasKey = string.Format(".HasKey(t => t.{0})", entity.KeyMembers[0].Name);
+   	else
+		hasKey = string.Format(".HasKey(t => new {{{0}}})", string.Join(", ", entity.KeyMembers.Select(m => "t." + m.Name)));
+
+#>
+		this<#=hasKey#>;
+<# 
+	foreach (var property in entity.Properties)
+    {
+		string required = string.Empty;
+		string generateOption = GetGenerationOption(property, entity);
+		string fixedLength = string.Empty;
+		string maxLength = string.Empty;
+		string unicode = string.Empty;
+		string isConcurrencyToken = string.Empty;
+		string isRowVersion = string.Empty;
+		string hasPrecision = string.Empty;
+		PrimitiveType edmType = property.TypeUsage.EdmType as PrimitiveType;
+
+		if (edmType == null)
+			continue;
+
+		if (edmType.ClrEquivalentType == typeof(string) || edmType.ClrEquivalentType == typeof(byte[]))
+		{
+			if (!property.Nullable)
+                required = ".IsRequired()";            
+		
+			Facet fixedLengthFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "FixedLength");
+			fixedLength = fixedLengthFacet != null && fixedLengthFacet.Value != null && ((bool)fixedLengthFacet.Value) ? ".IsFixedLength()" : "";
+		
+			Facet maxLengthFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "MaxLength");
+			maxLength = (maxLengthFacet != null && maxLengthFacet.Value != null && !maxLengthFacet.IsUnbounded) ? string.Format(".HasMaxLength({0})", maxLengthFacet.Value) : "";
+		}
+
+		if (edmType.ClrEquivalentType == typeof(string))
+		{
+			Facet unicodeFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Unicode");
+			unicode = unicodeFacet != null && unicodeFacet.Value != null && (!(bool)unicodeFacet.Value) ? ".IsUnicode(false)" : "";
+		}
+
+		if (edmType.ClrEquivalentType == typeof(decimal))
+		{
+			Facet precisionFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Precision");
+			Facet scaleFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Scale");
+
+			var precision = precisionFacet == null ? null : precisionFacet.Value;
+			var scale = scaleFacet == null ? null : scaleFacet.Value;
+
+			if (precision != null && scale != null) hasPrecision = string.Format(".HasPrecision({0}, {1})", precision, scale);
+		}
+
+		if (edmType.ClrEquivalentType == typeof(DateTime)
+			|| edmType.ClrEquivalentType == typeof(DateTimeOffset)
+			|| edmType.ClrEquivalentType == typeof(TimeSpan))
+		{
+			Facet precisionFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Precision");
+
+			var precision = precisionFacet == null ? null : precisionFacet.Value;
+
+			if (precision != null) hasPrecision = string.Format(".HasPrecision({0})", precision);
+		}
+
+		if (property.Name == "RowVersion"
+			|| (edmType.ClrEquivalentType == typeof(byte[])
+				&& fixedLength == ".IsFixedLength()"
+				&& maxLength == ".HasMaxLength(8)"
+				&& generateOption == ".HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed)"))
+		{
+			required = "";
+			generateOption = "";
+			fixedLength = "";
+			maxLength = "";
+			unicode = "";
+			isConcurrencyToken = "";
+			isRowVersion = ".IsRowVersion()";
+		}
+
+		var fluent = required + generateOption + fixedLength + maxLength + unicode
+			+ isConcurrencyToken + isRowVersion + hasPrecision;
+
+		if (!string.IsNullOrEmpty(fluent))
+		{
+#>
+		this.Property(t => t.<#= property.Name#>)<#=fluent#>;
+<#
+		}
+    } 
+
+  	var navigationProperties = entity.NavigationProperties.Where(np => 
+			{
+				return ((np.DeclaringType == entity) && 
+					   ((AssociationType) np.RelationshipType).IsForeignKey) && 
+					   (((AssociationType) np.RelationshipType).ReferentialConstraints.Single<ReferentialConstraint>().ToRole == np.FromEndMember);
+			});
+	foreach(var navProperty in navigationProperties)
+	{
+		var navPropBuilder = new StringBuilder();
+		var navPropertyBackReference = navProperty.ToEndMember.GetEntityType().NavigationProperties
+						.Where(npBack => npBack.RelationshipType == navProperty.RelationshipType && npBack != navProperty)
+						.Single();
+        AssociationType associationType = (AssociationType) navProperty.RelationshipType;
+        if (navProperty.ToEndMember.RelationshipMultiplicity == RelationshipMultiplicity.One)            
+            navPropBuilder.AppendFormat("this.HasRequired(t => t.{0})", code.Escape(navProperty));                            
+        else            
+            navPropBuilder.AppendFormat("this.HasOptional(t => t.{0})", code.Escape(navProperty));                
+        
+        if (navProperty.FromEndMember.RelationshipMultiplicity == RelationshipMultiplicity.Many)
+        {
+            navPropBuilder.AppendFormat(".WithMany(t => t.{0})", code.Escape(navPropertyBackReference));                
+            if (associationType.ReferentialConstraints.Single().ToProperties.Count == 1)                
+                navPropBuilder.AppendFormat(".HasForeignKey(d => d.{0})", associationType.ReferentialConstraints.Single().ToProperties.Single().Name);                    
+            else
+            	navPropBuilder.AppendFormat(".HasForeignKey(d => new {{{0}}})", string.Join(", ", associationType.ReferentialConstraints.Single().ToProperties.Select(p => "d." + p.Name)));                    
+        }
+        else
+        {
+            navPropBuilder.AppendFormat(".WithOptional(t => t.{0})", code.Escape(navPropertyBackReference));                
+        }
+#>
+		<#= navPropBuilder.ToString() #>;
+<# 
+		}
+#>
+		CustomConfiguration();
+    }
+}
+<#
+    EndNamespace(code);
+}
+
+fileManager.Process();
+#>

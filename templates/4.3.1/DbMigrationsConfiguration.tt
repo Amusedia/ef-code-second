@@ -5,7 +5,7 @@
 
 var loader = new MetadataLoader(this);
 var region = new CodeRegion(this);
-var inputFile = @"..\Database.edmx";
+var inputFile = @"Database.edmx";
 var ItemCollection = loader.CreateEdmItemCollection(inputFile);
 var projectName = Host.ResolveAssemblyReference("$(ProjectName)");
 
@@ -55,7 +55,7 @@ public sealed class DbMigrationsConfiguration : DbMigrationsConfiguration<<#=Cod
 
         AutomaticMigrationsEnabled = true;
         MigrationsAssembly = dbContextType.Assembly;
-        MigrationsNamespace = "<#=Code.EscapeNamespace(ObjectNamespace)#>";
+        MigrationsNamespace = "<#=Code.EscapeNamespace(ObjectNamespace)#>.Migrations";
         MigrationsDirectory = "Migrations";
         ContextType = dbContextType;
     }

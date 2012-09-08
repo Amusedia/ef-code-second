@@ -1,0 +1,96 @@
+﻿<#@ include file="..\\CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+WriteHeader(codeStringGenerator, fileManager);
+
+foreach (var entity in entities)
+{
+	var escapedEntityName = code.Escape(entity);
+	var repositoryName = escapedEntityName + "Repository";
+
+    fileManager.StartNewFile(repositoryName + ".partial.cs");
+    BeginNamespace(code);
+#>
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using <#=escapedNamespace.Replace("Repositories", "Entities")#>;
+
+public partial class <#=repositoryName#> : IDbSet<<#=escapedEntityName#>>
+{
+    private readonly DbSet<<#=escapedEntityName#>> _dbSet;
+
+    internal <#=repositoryName#>(DbSet<<#=escapedEntityName#>> dbSet)
+    {
+		_dbSet = dbSet;
+    }
+    
+	public <#=escapedEntityName#> Add(<#=escapedEntityName#> entity)
+	{
+ 		return _dbSet.Add(entity);
+	}
+
+	public <#=escapedEntityName#> Attach(<#=escapedEntityName#> entity)
+	{
+ 		return _dbSet.Attach(entity);
+	}
+
+	public <#=escapedEntityName#> Create()
+	{
+ 		return _dbSet.Create();
+	}
+
+    TDerivedEntity IDbSet<<#=escapedEntityName#>>.Create<TDerivedEntity>()
+    {
+        return _dbSet.Create<TDerivedEntity>();
+    }
+
+	public <#=escapedEntityName#> Find(params object[] keyValues)
+	{
+ 		return _dbSet.Find(keyValues);
+	}
+
+	public System.Collections.ObjectModel.ObservableCollection<<#=escapedEntityName#>> Local
+	{
+		get { return _dbSet.Local; }
+	}
+
+	public <#=escapedEntityName#> Remove(<#=escapedEntityName#> entity)
+	{
+		return _dbSet.Remove(entity);
+	}
+
+    public Type ElementType
+    {
+        get { return ((IQueryable)_dbSet).ElementType; }
+    }
+
+    public System.Linq.Expressions.Expression Expression
+    {
+        get { return ((IQueryable)_dbSet).Expression; }
+    }
+
+    public System.Linq.IQueryProvider Provider
+    {
+        get { return ((IQueryable)_dbSet).Provider; }
+    }
+
+    public IEnumerator<<#=escapedEntityName#>> GetEnumerator()
+    {
+        return ((IEnumerable<<#=escapedEntityName#>>) _dbSet).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable) _dbSet).GetEnumerator();
+    }
+}
+
+<#
+    EndNamespace(code);
+}
+
+fileManager.Process();
+#>

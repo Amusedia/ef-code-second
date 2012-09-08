@@ -1,0 +1,44 @@
+﻿<#@ include file="CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+	WriteHeader(codeStringGenerator, fileManager);
+	var className = escapedContainerName + "MigrationsConfiguration";
+    fileManager.StartNewFile(className + ".cs");
+	BeginNamespace(code);
+#>
+using System.Data.Entity;
+using System.Data.Entity.Migrations;
+
+/// <remarks>
+/// To add new migration run the following script
+/// Add-Migration ${migrationName} -ProjectName "${projectName}" -StartUpProjectName "${projectName}" -ConfigurationTypeName "<#=escapedNamespace#>.<#=className#>" -ConnectionProviderName "System.Data.SqlClient"
+/// Add-Migration InitialCreate -ProjectName "<#=projectName#>" -StartUpProjectName "<#=projectName#>" -ConfigurationTypeName "<#=escapedNamespace#>.<#=className#>" -ConnectionProviderName "System.Data.SqlClient"
+/// </remarks>
+public sealed class <#=className#> : DbMigrationsConfiguration<<#=escapedContainerName#>>
+{
+    public <#=className#>()
+    {
+        var dbContextType = typeof(<#=escapedContainerName#>);
+
+        AutomaticMigrationsEnabled = true;
+        MigrationsAssembly = dbContextType.Assembly;
+        MigrationsNamespace = "<#=escapedNamespace#>.Migrations";
+        MigrationsDirectory = "Migrations";
+        ContextType = dbContextType;
+    }
+
+    public static void UpdateSchema(string connectionString)
+    {
+        var migrator = new MigrateDatabaseToLatestVersion<<#=escapedContainerName#>, <#=className#>>();
+
+        using (var context = new <#=escapedContainerName#>(connectionString))
+        {
+            migrator.InitializeDatabase(context);
+        }
+    }
+}
+<#
+	EndNamespace(code);
+
+	fileManager.Process();
+#>

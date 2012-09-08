@@ -1,0 +1,89 @@
+﻿<#@ include file="CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+	WriteHeader(codeStringGenerator, fileManager);
+    fileManager.StartNewFile(container.Name + ".partial.cs");
+	BeginNamespace(code);
+#>
+using System;
+using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration.Conventions;
+<#
+if (container.FunctionImports.Any())
+{
+#>
+using System.Data.Objects;
+using System.Data.Objects.DataClasses;
+using System.Linq;
+<#
+}
+#>
+using <#=escapedNamespace#>.Configurations;
+using <#=escapedNamespace#>.Entities;
+using <#=escapedNamespace#>.Repositories;
+
+<#=Accessibility.ForType(container)#> partial class <#=escapedContainerName#> : DbContext
+{
+    public <#=escapedContainerName#>()
+        : this("name=<#=escapedContainerName#>")
+	{
+	}
+
+    public <#=escapedContainerName#>(string connectionString)
+        : base(connectionString)
+    {
+<#
+//<EntityContainer Name="DatabaseContainer" annotation:LazyLoadingEnabled="true">
+if (!loader.IsLazyLoadingEnabled(container))
+{
+#>
+        this.Configuration.LazyLoadingEnabled = false;
+<#
+}
+foreach (var entitySet in container.BaseEntitySets.OfType<EntitySet>())
+{
+#>
+		<#=code.Escape(entitySet)#> = new <#=code.Escape(entitySet.ElementType)#>Repository(this.Set<<#=code.Escape(entitySet.ElementType)#>>());
+<#
+}
+#>
+    }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
+<#
+foreach (var entity in entities)
+{
+#>
+        modelBuilder.Configurations.Add(new <#=code.Escape(entity)#>Configuration());
+<#
+}
+
+foreach (var complexType in complexTypes)
+{
+#>
+        modelBuilder.Configurations.Add(new <#=code.Escape(complexType)#>Configuration());
+<#}
+#>
+    }
+
+<#
+    foreach (var entitySet in entitySets)
+    {
+#>
+    <#=Accessibility.ForReadOnlyProperty(entitySet)#> <#=code.Escape(entitySet.ElementType)#>Repository <#=code.Escape(entitySet)#> { get; set; }
+<#
+    }
+
+    foreach (var edmFunction in container.FunctionImports)
+    {
+        WriteFunctionImport(typeMapper, codeStringGenerator, edmFunction, modelNamespace, includeMergeOption: false);
+    }
+#>
+}
+<#
+	EndNamespace(code);
+
+	fileManager.Process();
+#>

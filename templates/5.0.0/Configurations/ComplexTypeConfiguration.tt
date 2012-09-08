@@ -1,0 +1,110 @@
+﻿<#@ include file="..\\CodeSecond.ttinclude"#>
+<#@ output extension=".txt"#>
+<#
+WriteHeader(codeStringGenerator, fileManager);
+foreach (var complexType in complexTypes)
+{
+	var escapedTypeName = code.Escape(complexType);
+	var typeConfigurationName = escapedTypeName + "Configuration";
+
+    fileManager.StartNewFile(typeConfigurationName + ".partial.cs");
+    BeginNamespace(code);
+#>
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity.ModelConfiguration;
+using <#=escapedNamespace.Replace("Configurations", "Entities")#>;
+
+internal partial class <#=typeConfigurationName#> : ComplexTypeConfiguration<<#=escapedTypeName#>>
+{
+	public <#=typeConfigurationName#>()
+	{
+<#
+    foreach (var property in complexType.Properties)
+    {
+		string required = string.Empty;
+		string generateOption = GetGenerationOption(property, complexType);
+		string fixedLength = string.Empty;
+		string maxLength = string.Empty;
+		string unicode = string.Empty;
+		string isConcurrencyToken = string.Empty;
+		string isRowVersion = string.Empty;
+		string hasPrecision = string.Empty;
+		PrimitiveType edmType = property.TypeUsage.EdmType as PrimitiveType;
+
+		if (edmType == null)
+			continue;
+
+		if (edmType.ClrEquivalentType == typeof(string) || edmType.ClrEquivalentType == typeof(byte[]))
+		{
+			if (!property.Nullable)
+                required = ".IsRequired()";            
+		
+			Facet fixedLengthFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "FixedLength");
+			fixedLength = fixedLengthFacet != null && fixedLengthFacet.Value != null && ((bool)fixedLengthFacet.Value) ? ".IsFixedLength()" : "";
+		
+			Facet maxLengthFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "MaxLength");
+			maxLength = (maxLengthFacet != null && maxLengthFacet.Value != null && !maxLengthFacet.IsUnbounded) ? string.Format(".HasMaxLength({0})", maxLengthFacet.Value) : "";
+		}
+
+		if (edmType.ClrEquivalentType == typeof(string))
+		{
+			Facet unicodeFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Unicode");
+			unicode = unicodeFacet != null && unicodeFacet.Value != null && (!(bool)unicodeFacet.Value) ? ".IsUnicode(false)" : "";
+		}
+
+		if (edmType.ClrEquivalentType == typeof(decimal))
+		{
+			Facet precisionFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Precision");
+			Facet scaleFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Scale");
+
+			var precision = precisionFacet == null ? null : precisionFacet.Value;
+			var scale = scaleFacet == null ? null : scaleFacet.Value;
+
+			if (precision != null && scale != null) hasPrecision = string.Format(".HasPrecision({0}, {1})", precision, scale);
+		}
+
+		if (edmType.ClrEquivalentType == typeof(DateTime)
+			|| edmType.ClrEquivalentType == typeof(DateTimeOffset)
+			|| edmType.ClrEquivalentType == typeof(TimeSpan))
+		{
+			Facet precisionFacet = property.TypeUsage.Facets.SingleOrDefault(f => f.Name == "Precision");
+
+			var precision = precisionFacet == null ? null : precisionFacet.Value;
+
+			if (precision != null) hasPrecision = string.Format(".HasPrecision({0})", precision);
+		}
+
+		if (property.Name == "RowVersion"
+			|| (edmType.ClrEquivalentType == typeof(byte[])
+				&& fixedLength == ".IsFixedLength()"
+				&& maxLength == ".HasMaxLength(8)"
+				&& generateOption == ".HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed)"))
+		{
+			required = "";
+			generateOption = "";
+			fixedLength = "";
+			maxLength = "";
+			unicode = "";
+			isConcurrencyToken = "";
+			isRowVersion = ".IsRowVersion()";
+		}
+
+		var fluent = required + generateOption + fixedLength + maxLength + unicode
+			+ isConcurrencyToken + isRowVersion + hasPrecision;
+
+		if (!string.IsNullOrEmpty(fluent))
+		{
+#>
+		this.Property(t => t.<#= property.Name#>)<#=fluent#>;
+<#
+		}
+    }
+#>
+	}
+}
+<#
+    EndNamespace(code);
+}
+
+fileManager.Process();
+#>
