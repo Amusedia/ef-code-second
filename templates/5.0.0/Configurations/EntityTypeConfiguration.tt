@@ -6,7 +6,12 @@ foreach (var entity in entities)
 {
 	var escapedEntityName = code.Escape(entity);
 	var typeConfigurationName = escapedEntityName + "Configuration";
-	var entitySetName = entitySets.Single(es => es.ElementType == entity).Name;
+	var entitySet = entitySets.Single(es => es.ElementType == entity);
+	var entitySetName = entitySet.Name;
+	var schema = string.Empty;
+
+	if (defaultSchema != "dbo" && !string.IsNullOrEmpty(defaultSchema))
+		schema = string.Format(", \"{0}\"", defaultSchema);
 
     fileManager.StartNewFile(typeConfigurationName + ".partial.cs");
     BeginNamespace(code);
@@ -21,7 +26,7 @@ internal partial class <#=typeConfigurationName#> : EntityTypeConfiguration<<#=e
 
     public <#=typeConfigurationName#>()
     {
-		this.ToTable("<#=entitySetName#>");
+		this.ToTable("<#=entitySetName#>"<#=schema#>);
 <# 	
 	string hasKey;
 	if(entity.KeyMembers.Count<EdmMember>() == 1)
